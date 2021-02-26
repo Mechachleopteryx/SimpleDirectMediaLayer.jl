@@ -1,0 +1,9 @@
+[general]
+library_name = "libsdl2"
+output_file_path = "./src/LibSDL2.jl"
+module_name = "LibSDL2"
+prologue_file_path = "./gen/prologue.jl"
+export_symbol_prefixes = ["TTF_", "IMG_", "Mix_", "SDL_"]
+
+[codegen.macro]
+macro_mode = "none"
