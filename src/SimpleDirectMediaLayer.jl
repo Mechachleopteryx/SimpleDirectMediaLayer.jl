@@ -1,10 +1,8 @@
 __precompile__()
 module SimpleDirectMediaLayer
 
-    using SDL2_jll
-    using SDL2_mixer_jll
-    using SDL2_image_jll
-    using SDL2_ttf_jll
+    include("LibSDL2.jl")
+    using .LibSDL2
 
     Base.@deprecate_binding libSDL2       SimpleDirectMediaLayer.libsdl2       false
     Base.@deprecate_binding libSDL2_mixer SimpleDirectMediaLayer.libsdl2_mixer false
@@ -14,11 +12,6 @@ module SimpleDirectMediaLayer
 
     import Base.unsafe_convert
     export  TTF_Init, TTF_OpenFont, TTF_RenderText_Blended, TTF_SizeText
-
-    include("lib/SDL.jl")
-    include("lib/SDL_ttf.jl")
-    include("lib/SDL_mixer.jl")
-    include("lib/SDL_image.jl")
 
     mutable struct SDLWindow
         win::Ptr{Window}
