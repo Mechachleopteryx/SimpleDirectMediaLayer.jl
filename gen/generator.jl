@@ -1,9 +1,11 @@
 using Clang
 using Clang.Generators
-using SimpleDirectMediaLayer.SDL2_jll
-using SimpleDirectMediaLayer.SDL2_mixer_jll
-using SimpleDirectMediaLayer.SDL2_image_jll
-using SimpleDirectMediaLayer.SDL2_ttf_jll
+using SDL2_jll
+using SDL2_mixer_jll
+using SDL2_image_jll
+using SDL2_ttf_jll
+
+cd(@__DIR__)
 
 sdl2_include_dir = joinpath(SDL2_jll.artifact_dir, "include") |> normpath
 sdl_mixer_h = joinpath(SDL2_mixer_jll.artifact_dir, "include", "SDL2", "SDL_mixer.h") |> normpath
@@ -22,8 +24,6 @@ sdl_mixer_h = joinpath(local_include_dir, "SDL2", "SDL_mixer.h")
 sdl_image_h = joinpath(local_include_dir, "SDL2", "SDL_image.h")
 sdl_ttf_h = joinpath(local_include_dir, "SDL2", "SDL_ttf.h")
 sdl_h = joinpath(local_include_dir, "SDL2", "SDL.h")
-
-@add_def SDL_BlitMap
 
 options = load_options(joinpath(@__DIR__, "generator.toml"))
 

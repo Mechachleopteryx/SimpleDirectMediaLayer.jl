@@ -1,24 +1,22 @@
 module LibSDL2
 
-using CEnum
-
 using SDL2_jll
 export SDL2_jll
+
 using SDL2_mixer_jll
 export SDL2_mixer_jll
+
 using SDL2_image_jll
 export SDL2_image_jll
+
 using SDL2_ttf_jll
 export SDL2_ttf_jll
-
-const SDL_BlitMap = Cvoid
-
 
 function SDL_GetPlatform()
     ccall((:SDL_GetPlatform, libsdl2), Ptr{Cchar}, ())
 end
 
-@cenum SDL_bool::UInt32 begin
+@enum SDL_bool::UInt32 begin
     SDL_FALSE = 0
     SDL_TRUE = 1
 end
@@ -55,7 +53,7 @@ const SDL_compile_time_assert_uint64 = NTuple{1, Cint}
 
 const SDL_compile_time_assert_sint64 = NTuple{1, Cint}
 
-@cenum SDL_DUMMY_ENUM::UInt32 begin
+@enum SDL_DUMMY_ENUM::UInt32 begin
     DUMMY_ENUM_VALUE = 0
 end
 
@@ -493,7 +491,7 @@ function SDL_SetMainReady()
     ccall((:SDL_SetMainReady, libsdl2), Cvoid, ())
 end
 
-@cenum SDL_AssertState::UInt32 begin
+@enum SDL_AssertState::UInt32 begin
     SDL_ASSERTION_RETRY = 0
     SDL_ASSERTION_BREAK = 1
     SDL_ASSERTION_ABORT = 2
@@ -601,7 +599,7 @@ function SDL_ClearError()
     ccall((:SDL_ClearError, libsdl2), Cvoid, ())
 end
 
-@cenum SDL_errorcode::UInt32 begin
+@enum SDL_errorcode::UInt32 begin
     SDL_ENOMEM = 0
     SDL_EFREAD = 1
     SDL_EFWRITE = 2
@@ -716,7 +714,7 @@ const SDL_threadID = Culong
 
 const SDL_TLSID = Cuint
 
-@cenum SDL_ThreadPriority::UInt32 begin
+@enum SDL_ThreadPriority::UInt32 begin
     SDL_THREAD_PRIORITY_LOW = 0
     SDL_THREAD_PRIORITY_NORMAL = 1
     SDL_THREAD_PRIORITY_HIGH = 2
@@ -773,6 +771,28 @@ end
 
 struct SDL_RWops
     data::NTuple{72, UInt8}
+end
+
+function Base.getproperty(x::Ptr{SDL_RWops}, f::Symbol)
+    f === :size && return Ptr{Ptr{Cvoid}}(x + 0)
+    f === :seek && return Ptr{Ptr{Cvoid}}(x + 8)
+    f === :read && return Ptr{Ptr{Cvoid}}(x + 16)
+    f === :write && return Ptr{Ptr{Cvoid}}(x + 24)
+    f === :close && return Ptr{Ptr{Cvoid}}(x + 32)
+    f === :type && return Ptr{Uint32}(x + 40)
+    f === :hidden && return Ptr{var"##Ctag#655"}(x + 48)
+    return getfield(x, f)
+end
+
+function Base.getproperty(x::SDL_RWops, f::Symbol)
+    r = Ref{SDL_RWops}(x)
+    ptr = Base.unsafe_convert(Ptr{SDL_RWops}, r)
+    fptr = getproperty(ptr, f)
+    GC.@preserve r unsafe_load(fptr)
+end
+
+function Base.setproperty!(x::Ptr{SDL_RWops}, f::Symbol, v)
+    unsafe_store!(getproperty(x, f), v)
 end
 
 function SDL_RWFromFile(file, mode)
@@ -913,6 +933,32 @@ struct SDL_AudioCVT
     data::NTuple{128, UInt8}
 end
 
+function Base.getproperty(x::Ptr{SDL_AudioCVT}, f::Symbol)
+    f === :needed && return Ptr{Cint}(x + 0)
+    f === :src_format && return Ptr{SDL_AudioFormat}(x + 4)
+    f === :dst_format && return Ptr{SDL_AudioFormat}(x + 6)
+    f === :rate_incr && return Ptr{Cdouble}(x + 8)
+    f === :buf && return Ptr{Ptr{Uint8}}(x + 16)
+    f === :len && return Ptr{Cint}(x + 24)
+    f === :len_cvt && return Ptr{Cint}(x + 28)
+    f === :len_mult && return Ptr{Cint}(x + 32)
+    f === :len_ratio && return Ptr{Cdouble}(x + 36)
+    f === :filters && return Ptr{NTuple{10, SDL_AudioFilter}}(x + 44)
+    f === :filter_index && return Ptr{Cint}(x + 124)
+    return getfield(x, f)
+end
+
+function Base.getproperty(x::SDL_AudioCVT, f::Symbol)
+    r = Ref{SDL_AudioCVT}(x)
+    ptr = Base.unsafe_convert(Ptr{SDL_AudioCVT}, r)
+    fptr = getproperty(ptr, f)
+    GC.@preserve r unsafe_load(fptr)
+end
+
+function Base.setproperty!(x::Ptr{SDL_AudioCVT}, f::Symbol, v)
+    unsafe_store!(getproperty(x, f), v)
+end
+
 function SDL_GetNumAudioDrivers()
     ccall((:SDL_GetNumAudioDrivers, libsdl2), Cint, ())
 end
@@ -951,7 +997,7 @@ function SDL_OpenAudioDevice(device, iscapture, desired, obtained, allowed_chang
     ccall((:SDL_OpenAudioDevice, libsdl2), SDL_AudioDeviceID, (Ptr{Cchar}, Cint, Ptr{SDL_AudioSpec}, Ptr{SDL_AudioSpec}, Cint), device, iscapture, desired, obtained, allowed_changes)
 end
 
-@cenum SDL_AudioStatus::UInt32 begin
+@enum SDL_AudioStatus::UInt32 begin
     SDL_AUDIO_STOPPED = 0
     SDL_AUDIO_PLAYING = 1
     SDL_AUDIO_PAUSED = 2
@@ -1161,7 +1207,7 @@ function SDL_SIMDFree(ptr)
     ccall((:SDL_SIMDFree, libsdl2), Cvoid, (Ptr{Cvoid},), ptr)
 end
 
-@cenum SDL_PixelType::UInt32 begin
+@enum SDL_PixelType::UInt32 begin
     SDL_PIXELTYPE_UNKNOWN = 0
     SDL_PIXELTYPE_INDEX1 = 1
     SDL_PIXELTYPE_INDEX4 = 2
@@ -1176,13 +1222,13 @@ end
     SDL_PIXELTYPE_ARRAYF32 = 11
 end
 
-@cenum SDL_BitmapOrder::UInt32 begin
+@enum SDL_BitmapOrder::UInt32 begin
     SDL_BITMAPORDER_NONE = 0
     SDL_BITMAPORDER_4321 = 1
     SDL_BITMAPORDER_1234 = 2
 end
 
-@cenum SDL_PackedOrder::UInt32 begin
+@enum SDL_PackedOrder::UInt32 begin
     SDL_PACKEDORDER_NONE = 0
     SDL_PACKEDORDER_XRGB = 1
     SDL_PACKEDORDER_RGBX = 2
@@ -1194,7 +1240,7 @@ end
     SDL_PACKEDORDER_BGRA = 8
 end
 
-@cenum SDL_ArrayOrder::UInt32 begin
+@enum SDL_ArrayOrder::UInt32 begin
     SDL_ARRAYORDER_NONE = 0
     SDL_ARRAYORDER_RGB = 1
     SDL_ARRAYORDER_RGBA = 2
@@ -1204,7 +1250,7 @@ end
     SDL_ARRAYORDER_ABGR = 6
 end
 
-@cenum SDL_PackedLayout::UInt32 begin
+@enum SDL_PackedLayout::UInt32 begin
     SDL_PACKEDLAYOUT_NONE = 0
     SDL_PACKEDLAYOUT_332 = 1
     SDL_PACKEDLAYOUT_4444 = 2
@@ -1216,7 +1262,7 @@ end
     SDL_PACKEDLAYOUT_1010102 = 8
 end
 
-@cenum SDL_PixelFormatEnum::UInt32 begin
+@enum SDL_PixelFormatEnum::UInt32 begin
     SDL_PIXELFORMAT_UNKNOWN = 0
     SDL_PIXELFORMAT_INDEX1LSB = 286261504
     SDL_PIXELFORMAT_INDEX1MSB = 287310080
@@ -1249,10 +1295,10 @@ end
     SDL_PIXELFORMAT_ABGR8888 = 376840196
     SDL_PIXELFORMAT_BGRA8888 = 377888772
     SDL_PIXELFORMAT_ARGB2101010 = 372711428
-    SDL_PIXELFORMAT_RGBA32 = 376840196
-    SDL_PIXELFORMAT_ARGB32 = 377888772
-    SDL_PIXELFORMAT_BGRA32 = 372645892
-    SDL_PIXELFORMAT_ABGR32 = 373694468
+    # SDL_PIXELFORMAT_RGBA32 = 376840196
+    # SDL_PIXELFORMAT_ARGB32 = 377888772
+    # SDL_PIXELFORMAT_BGRA32 = 372645892
+    # SDL_PIXELFORMAT_ABGR32 = 373694468
     SDL_PIXELFORMAT_YV12 = 842094169
     SDL_PIXELFORMAT_IYUV = 1448433993
     SDL_PIXELFORMAT_YUY2 = 844715353
@@ -1411,7 +1457,7 @@ function SDL_IntersectRectAndLine(rect, X1, Y1, X2, Y2)
     ccall((:SDL_IntersectRectAndLine, libsdl2), SDL_bool, (Ptr{SDL_Rect}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}), rect, X1, Y1, X2, Y2)
 end
 
-@cenum SDL_BlendMode::UInt32 begin
+@enum SDL_BlendMode::UInt32 begin
     SDL_BLENDMODE_NONE = 0
     SDL_BLENDMODE_BLEND = 1
     SDL_BLENDMODE_ADD = 2
@@ -1420,7 +1466,7 @@ end
     SDL_BLENDMODE_INVALID = 2147483647
 end
 
-@cenum SDL_BlendOperation::UInt32 begin
+@enum SDL_BlendOperation::UInt32 begin
     SDL_BLENDOPERATION_ADD = 1
     SDL_BLENDOPERATION_SUBTRACT = 2
     SDL_BLENDOPERATION_REV_SUBTRACT = 3
@@ -1428,7 +1474,7 @@ end
     SDL_BLENDOPERATION_MAXIMUM = 5
 end
 
-@cenum SDL_BlendFactor::UInt32 begin
+@enum SDL_BlendFactor::UInt32 begin
     SDL_BLENDFACTOR_ZERO = 1
     SDL_BLENDFACTOR_ONE = 2
     SDL_BLENDFACTOR_SRC_COLOR = 3
@@ -1444,6 +1490,8 @@ end
 function SDL_ComposeCustomBlendMode(srcColorFactor, dstColorFactor, colorOperation, srcAlphaFactor, dstAlphaFactor, alphaOperation)
     ccall((:SDL_ComposeCustomBlendMode, libsdl2), SDL_BlendMode, (SDL_BlendFactor, SDL_BlendFactor, SDL_BlendOperation, SDL_BlendFactor, SDL_BlendFactor, SDL_BlendOperation), srcColorFactor, dstColorFactor, colorOperation, srcAlphaFactor, dstAlphaFactor, alphaOperation)
 end
+
+mutable struct SDL_BlitMap end
 
 struct SDL_Surface
     flags::Uint32
@@ -1464,7 +1512,7 @@ end
 # typedef int ( SDLCALL * SDL_blit ) ( struct SDL_Surface * src , SDL_Rect * srcrect , struct SDL_Surface * dst , SDL_Rect * dstrect )
 const SDL_blit = Ptr{Cvoid}
 
-@cenum SDL_YUV_CONVERSION_MODE::UInt32 begin
+@enum SDL_YUV_CONVERSION_MODE::UInt32 begin
     SDL_YUV_CONVERSION_JPEG = 0
     SDL_YUV_CONVERSION_BT601 = 1
     SDL_YUV_CONVERSION_BT709 = 2
@@ -1625,7 +1673,7 @@ end
 
 mutable struct SDL_Window end
 
-@cenum SDL_WindowFlags::UInt32 begin
+@enum SDL_WindowFlags::UInt32 begin
     SDL_WINDOW_FULLSCREEN = 1
     SDL_WINDOW_OPENGL = 2
     SDL_WINDOW_SHOWN = 4
@@ -1649,7 +1697,7 @@ mutable struct SDL_Window end
     SDL_WINDOW_VULKAN = 268435456
 end
 
-@cenum SDL_WindowEventID::UInt32 begin
+@enum SDL_WindowEventID::UInt32 begin
     SDL_WINDOWEVENT_NONE = 0
     SDL_WINDOWEVENT_SHOWN = 1
     SDL_WINDOWEVENT_HIDDEN = 2
@@ -1669,12 +1717,12 @@ end
     SDL_WINDOWEVENT_HIT_TEST = 16
 end
 
-@cenum SDL_DisplayEventID::UInt32 begin
+@enum SDL_DisplayEventID::UInt32 begin
     SDL_DISPLAYEVENT_NONE = 0
     SDL_DISPLAYEVENT_ORIENTATION = 1
 end
 
-@cenum SDL_DisplayOrientation::UInt32 begin
+@enum SDL_DisplayOrientation::UInt32 begin
     SDL_ORIENTATION_UNKNOWN = 0
     SDL_ORIENTATION_LANDSCAPE = 1
     SDL_ORIENTATION_LANDSCAPE_FLIPPED = 2
@@ -1684,7 +1732,7 @@ end
 
 const SDL_GLContext = Ptr{Cvoid}
 
-@cenum SDL_GLattr::UInt32 begin
+@enum SDL_GLattr::UInt32 begin
     SDL_GL_RED_SIZE = 0
     SDL_GL_GREEN_SIZE = 1
     SDL_GL_BLUE_SIZE = 2
@@ -1714,25 +1762,25 @@ const SDL_GLContext = Ptr{Cvoid}
     SDL_GL_CONTEXT_NO_ERROR = 26
 end
 
-@cenum SDL_GLprofile::UInt32 begin
+@enum SDL_GLprofile::UInt32 begin
     SDL_GL_CONTEXT_PROFILE_CORE = 1
     SDL_GL_CONTEXT_PROFILE_COMPATIBILITY = 2
     SDL_GL_CONTEXT_PROFILE_ES = 4
 end
 
-@cenum SDL_GLcontextFlag::UInt32 begin
+@enum SDL_GLcontextFlag::UInt32 begin
     SDL_GL_CONTEXT_DEBUG_FLAG = 1
     SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG = 2
     SDL_GL_CONTEXT_ROBUST_ACCESS_FLAG = 4
     SDL_GL_CONTEXT_RESET_ISOLATION_FLAG = 8
 end
 
-@cenum SDL_GLcontextReleaseFlag::UInt32 begin
+@enum SDL_GLcontextReleaseFlag::UInt32 begin
     SDL_GL_CONTEXT_RELEASE_BEHAVIOR_NONE = 0
     SDL_GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH = 1
 end
 
-@cenum SDL_GLContextResetNotification::UInt32 begin
+@enum SDL_GLContextResetNotification::UInt32 begin
     SDL_GL_CONTEXT_RESET_NO_NOTIFICATION = 0
     SDL_GL_CONTEXT_RESET_LOSE_CONTEXT = 1
 end
@@ -1985,7 +2033,7 @@ function SDL_GetWindowGammaRamp(window, red, green, blue)
     ccall((:SDL_GetWindowGammaRamp, libsdl2), Cint, (Ptr{SDL_Window}, Ptr{Uint16}, Ptr{Uint16}, Ptr{Uint16}), window, red, green, blue)
 end
 
-@cenum SDL_HitTestResult::UInt32 begin
+@enum SDL_HitTestResult::UInt32 begin
     SDL_HITTEST_NORMAL = 0
     SDL_HITTEST_DRAGGABLE = 1
     SDL_HITTEST_RESIZE_TOPLEFT = 2
@@ -2086,7 +2134,7 @@ function SDL_GL_DeleteContext(context)
     ccall((:SDL_GL_DeleteContext, libsdl2), Cvoid, (SDL_GLContext,), context)
 end
 
-@cenum SDL_Scancode::UInt32 begin
+@enum SDL_Scancode::UInt32 begin
     SDL_SCANCODE_UNKNOWN = 0
     SDL_SCANCODE_A = 4
     SDL_SCANCODE_B = 5
@@ -2335,7 +2383,7 @@ end
 
 const SDL_Keycode = Sint32
 
-@cenum SDL_KeyCode::UInt32 begin
+@enum SDL_KeyCode::UInt32 begin
     SDLK_UNKNOWN = 0
     SDLK_RETURN = 13
     SDLK_ESCAPE = 27
@@ -2578,7 +2626,7 @@ const SDL_Keycode = Sint32
     SDLK_AUDIOFASTFORWARD = 1073742110
 end
 
-@cenum SDL_Keymod::UInt32 begin
+@enum SDL_Keymod::UInt32 begin
     KMOD_NONE = 0
     KMOD_LSHIFT = 1
     KMOD_RSHIFT = 2
@@ -2667,7 +2715,7 @@ end
 
 mutable struct SDL_Cursor end
 
-@cenum SDL_SystemCursor::UInt32 begin
+@enum SDL_SystemCursor::UInt32 begin
     SDL_SYSTEM_CURSOR_ARROW = 0
     SDL_SYSTEM_CURSOR_IBEAM = 1
     SDL_SYSTEM_CURSOR_WAIT = 2
@@ -2683,7 +2731,7 @@ mutable struct SDL_Cursor end
     SDL_NUM_SYSTEM_CURSORS = 12
 end
 
-@cenum SDL_MouseWheelDirection::UInt32 begin
+@enum SDL_MouseWheelDirection::UInt32 begin
     SDL_MOUSEWHEEL_NORMAL = 0
     SDL_MOUSEWHEEL_FLIPPED = 1
 end
@@ -2766,7 +2814,7 @@ end
 
 const SDL_JoystickID = Sint32
 
-@cenum SDL_JoystickType::UInt32 begin
+@enum SDL_JoystickType::UInt32 begin
     SDL_JOYSTICK_TYPE_UNKNOWN = 0
     SDL_JOYSTICK_TYPE_GAMECONTROLLER = 1
     SDL_JOYSTICK_TYPE_WHEEL = 2
@@ -2779,7 +2827,7 @@ const SDL_JoystickID = Sint32
     SDL_JOYSTICK_TYPE_THROTTLE = 9
 end
 
-@cenum SDL_JoystickPowerLevel::Int32 begin
+@enum SDL_JoystickPowerLevel::Int32 begin
     SDL_JOYSTICK_POWER_UNKNOWN = -1
     SDL_JOYSTICK_POWER_EMPTY = 0
     SDL_JOYSTICK_POWER_LOW = 1
@@ -2953,7 +3001,7 @@ mutable struct _SDL_GameController end
 
 const SDL_GameController = _SDL_GameController
 
-@cenum SDL_GameControllerType::UInt32 begin
+@enum SDL_GameControllerType::UInt32 begin
     SDL_CONTROLLER_TYPE_UNKNOWN = 0
     SDL_CONTROLLER_TYPE_XBOX360 = 1
     SDL_CONTROLLER_TYPE_XBOXONE = 2
@@ -2962,7 +3010,7 @@ const SDL_GameController = _SDL_GameController
     SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO = 5
 end
 
-@cenum SDL_GameControllerBindType::UInt32 begin
+@enum SDL_GameControllerBindType::UInt32 begin
     SDL_CONTROLLER_BINDTYPE_NONE = 0
     SDL_CONTROLLER_BINDTYPE_BUTTON = 1
     SDL_CONTROLLER_BINDTYPE_AXIS = 2
@@ -2971,6 +3019,23 @@ end
 
 struct SDL_GameControllerButtonBind
     data::NTuple{12, UInt8}
+end
+
+function Base.getproperty(x::Ptr{SDL_GameControllerButtonBind}, f::Symbol)
+    f === :bindType && return Ptr{SDL_GameControllerBindType}(x + 0)
+    f === :value && return Ptr{var"##Ctag#659"}(x + 4)
+    return getfield(x, f)
+end
+
+function Base.getproperty(x::SDL_GameControllerButtonBind, f::Symbol)
+    r = Ref{SDL_GameControllerButtonBind}(x)
+    ptr = Base.unsafe_convert(Ptr{SDL_GameControllerButtonBind}, r)
+    fptr = getproperty(ptr, f)
+    GC.@preserve r unsafe_load(fptr)
+end
+
+function Base.setproperty!(x::Ptr{SDL_GameControllerButtonBind}, f::Symbol, v)
+    unsafe_store!(getproperty(x, f), v)
 end
 
 function SDL_GameControllerAddMappingsFromRW(rw, freerw)
@@ -3069,7 +3134,7 @@ function SDL_GameControllerUpdate()
     ccall((:SDL_GameControllerUpdate, libsdl2), Cvoid, ())
 end
 
-@cenum SDL_GameControllerAxis::Int32 begin
+@enum SDL_GameControllerAxis::Int32 begin
     SDL_CONTROLLER_AXIS_INVALID = -1
     SDL_CONTROLLER_AXIS_LEFTX = 0
     SDL_CONTROLLER_AXIS_LEFTY = 1
@@ -3096,7 +3161,7 @@ function SDL_GameControllerGetAxis(gamecontroller, axis)
     ccall((:SDL_GameControllerGetAxis, libsdl2), Sint16, (Ptr{SDL_GameController}, SDL_GameControllerAxis), gamecontroller, axis)
 end
 
-@cenum SDL_GameControllerButton::Int32 begin
+@enum SDL_GameControllerButton::Int32 begin
     SDL_CONTROLLER_BUTTON_INVALID = -1
     SDL_CONTROLLER_BUTTON_A = 0
     SDL_CONTROLLER_BUTTON_B = 1
@@ -3144,7 +3209,7 @@ const SDL_TouchID = Sint64
 
 const SDL_FingerID = Sint64
 
-@cenum SDL_TouchDeviceType::Int32 begin
+@enum SDL_TouchDeviceType::Int32 begin
     SDL_TOUCH_DEVICE_INVALID = -1
     SDL_TOUCH_DEVICE_DIRECT = 0
     SDL_TOUCH_DEVICE_INDIRECT_ABSOLUTE = 1
@@ -3196,7 +3261,7 @@ function SDL_LoadDollarTemplates(touchId, src)
     ccall((:SDL_LoadDollarTemplates, libsdl2), Cint, (SDL_TouchID, Ptr{SDL_RWops}), touchId, src)
 end
 
-@cenum SDL_EventType::UInt32 begin
+@enum SDL_EventType::UInt32 begin
     SDL_FIRSTEVENT = 0
     SDL_QUIT = 256
     SDL_APP_TERMINATING = 257
@@ -3509,13 +3574,56 @@ struct SDL_Event
     data::NTuple{56, UInt8}
 end
 
+function Base.getproperty(x::Ptr{SDL_Event}, f::Symbol)
+    f === :type && return Ptr{Uint32}(x + 0)
+    f === :common && return Ptr{SDL_CommonEvent}(x + 0)
+    f === :display && return Ptr{SDL_DisplayEvent}(x + 0)
+    f === :window && return Ptr{SDL_WindowEvent}(x + 0)
+    f === :key && return Ptr{SDL_KeyboardEvent}(x + 0)
+    f === :edit && return Ptr{SDL_TextEditingEvent}(x + 0)
+    f === :text && return Ptr{SDL_TextInputEvent}(x + 0)
+    f === :motion && return Ptr{SDL_MouseMotionEvent}(x + 0)
+    f === :button && return Ptr{SDL_MouseButtonEvent}(x + 0)
+    f === :wheel && return Ptr{SDL_MouseWheelEvent}(x + 0)
+    f === :jaxis && return Ptr{SDL_JoyAxisEvent}(x + 0)
+    f === :jball && return Ptr{SDL_JoyBallEvent}(x + 0)
+    f === :jhat && return Ptr{SDL_JoyHatEvent}(x + 0)
+    f === :jbutton && return Ptr{SDL_JoyButtonEvent}(x + 0)
+    f === :jdevice && return Ptr{SDL_JoyDeviceEvent}(x + 0)
+    f === :caxis && return Ptr{SDL_ControllerAxisEvent}(x + 0)
+    f === :cbutton && return Ptr{SDL_ControllerButtonEvent}(x + 0)
+    f === :cdevice && return Ptr{SDL_ControllerDeviceEvent}(x + 0)
+    f === :adevice && return Ptr{SDL_AudioDeviceEvent}(x + 0)
+    f === :sensor && return Ptr{SDL_SensorEvent}(x + 0)
+    f === :quit && return Ptr{SDL_QuitEvent}(x + 0)
+    f === :user && return Ptr{SDL_UserEvent}(x + 0)
+    f === :syswm && return Ptr{SDL_SysWMEvent}(x + 0)
+    f === :tfinger && return Ptr{SDL_TouchFingerEvent}(x + 0)
+    f === :mgesture && return Ptr{SDL_MultiGestureEvent}(x + 0)
+    f === :dgesture && return Ptr{SDL_DollarGestureEvent}(x + 0)
+    f === :drop && return Ptr{SDL_DropEvent}(x + 0)
+    f === :padding && return Ptr{NTuple{56, Uint8}}(x + 0)
+    return getfield(x, f)
+end
+
+function Base.getproperty(x::SDL_Event, f::Symbol)
+    r = Ref{SDL_Event}(x)
+    ptr = Base.unsafe_convert(Ptr{SDL_Event}, r)
+    fptr = getproperty(ptr, f)
+    GC.@preserve r unsafe_load(fptr)
+end
+
+function Base.setproperty!(x::Ptr{SDL_Event}, f::Symbol, v)
+    unsafe_store!(getproperty(x, f), v)
+end
+
 const SDL_compile_time_assert_SDL_Event = NTuple{1, Cint}
 
 function SDL_PumpEvents()
     ccall((:SDL_PumpEvents, libsdl2), Cvoid, ())
 end
 
-@cenum SDL_eventaction::UInt32 begin
+@enum SDL_eventaction::UInt32 begin
     SDL_ADDEVENT = 0
     SDL_PEEKEVENT = 1
     SDL_GETEVENT = 2
@@ -3695,6 +3803,28 @@ struct SDL_HapticEffect
     data::NTuple{72, UInt8}
 end
 
+function Base.getproperty(x::Ptr{SDL_HapticEffect}, f::Symbol)
+    f === :type && return Ptr{Uint16}(x + 0)
+    f === :constant && return Ptr{SDL_HapticConstant}(x + 0)
+    f === :periodic && return Ptr{SDL_HapticPeriodic}(x + 0)
+    f === :condition && return Ptr{SDL_HapticCondition}(x + 0)
+    f === :ramp && return Ptr{SDL_HapticRamp}(x + 0)
+    f === :leftright && return Ptr{SDL_HapticLeftRight}(x + 0)
+    f === :custom && return Ptr{SDL_HapticCustom}(x + 0)
+    return getfield(x, f)
+end
+
+function Base.getproperty(x::SDL_HapticEffect, f::Symbol)
+    r = Ref{SDL_HapticEffect}(x)
+    ptr = Base.unsafe_convert(Ptr{SDL_HapticEffect}, r)
+    fptr = getproperty(ptr, f)
+    GC.@preserve r unsafe_load(fptr)
+end
+
+function Base.setproperty!(x::Ptr{SDL_HapticEffect}, f::Symbol, v)
+    unsafe_store!(getproperty(x, f), v)
+end
+
 function SDL_NumHaptics()
     ccall((:SDL_NumHaptics, libsdl2), Cint, ())
 end
@@ -3815,7 +3945,7 @@ function SDL_HapticRumbleStop(haptic)
     ccall((:SDL_HapticRumbleStop, libsdl2), Cint, (Ptr{SDL_Haptic},), haptic)
 end
 
-@cenum SDL_HintPriority::UInt32 begin
+@enum SDL_HintPriority::UInt32 begin
     SDL_HINT_DEFAULT = 0
     SDL_HINT_NORMAL = 1
     SDL_HINT_OVERRIDE = 2
@@ -3865,7 +3995,7 @@ function SDL_UnloadObject(handle)
     ccall((:SDL_UnloadObject, libsdl2), Cvoid, (Ptr{Cvoid},), handle)
 end
 
-@cenum SDL_LogCategory::UInt32 begin
+@enum SDL_LogCategory::UInt32 begin
     SDL_LOG_CATEGORY_APPLICATION = 0
     SDL_LOG_CATEGORY_ERROR = 1
     SDL_LOG_CATEGORY_ASSERT = 2
@@ -3888,7 +4018,7 @@ end
     SDL_LOG_CATEGORY_CUSTOM = 19
 end
 
-@cenum SDL_LogPriority::UInt32 begin
+@enum SDL_LogPriority::UInt32 begin
     SDL_LOG_PRIORITY_VERBOSE = 1
     SDL_LOG_PRIORITY_DEBUG = 2
     SDL_LOG_PRIORITY_INFO = 3
@@ -3926,7 +4056,7 @@ function SDL_LogSetOutputFunction(callback, userdata)
     ccall((:SDL_LogSetOutputFunction, libsdl2), Cvoid, (SDL_LogOutputFunction, Ptr{Cvoid}), callback, userdata)
 end
 
-@cenum SDL_MessageBoxFlags::UInt32 begin
+@enum SDL_MessageBoxFlags::UInt32 begin
     SDL_MESSAGEBOX_ERROR = 16
     SDL_MESSAGEBOX_WARNING = 32
     SDL_MESSAGEBOX_INFORMATION = 64
@@ -3934,7 +4064,7 @@ end
     SDL_MESSAGEBOX_BUTTONS_RIGHT_TO_LEFT = 256
 end
 
-@cenum SDL_MessageBoxButtonFlags::UInt32 begin
+@enum SDL_MessageBoxButtonFlags::UInt32 begin
     SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT = 1
     SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT = 2
 end
@@ -3951,7 +4081,7 @@ struct SDL_MessageBoxColor
     b::Uint8
 end
 
-@cenum SDL_MessageBoxColorType::UInt32 begin
+@enum SDL_MessageBoxColorType::UInt32 begin
     SDL_MESSAGEBOX_COLOR_BACKGROUND = 0
     SDL_MESSAGEBOX_COLOR_TEXT = 1
     SDL_MESSAGEBOX_COLOR_BUTTON_BORDER = 2
@@ -3992,7 +4122,7 @@ function SDL_Metal_DestroyView(view)
     ccall((:SDL_Metal_DestroyView, libsdl2), Cvoid, (SDL_MetalView,), view)
 end
 
-@cenum SDL_PowerState::UInt32 begin
+@enum SDL_PowerState::UInt32 begin
     SDL_POWERSTATE_UNKNOWN = 0
     SDL_POWERSTATE_ON_BATTERY = 1
     SDL_POWERSTATE_NO_BATTERY = 2
@@ -4004,7 +4134,7 @@ function SDL_GetPowerInfo(secs, pct)
     ccall((:SDL_GetPowerInfo, libsdl2), SDL_PowerState, (Ptr{Cint}, Ptr{Cint}), secs, pct)
 end
 
-@cenum SDL_RendererFlags::UInt32 begin
+@enum SDL_RendererFlags::UInt32 begin
     SDL_RENDERER_SOFTWARE = 1
     SDL_RENDERER_ACCELERATED = 2
     SDL_RENDERER_PRESENTVSYNC = 4
@@ -4020,25 +4150,25 @@ struct SDL_RendererInfo
     max_texture_height::Cint
 end
 
-@cenum SDL_ScaleMode::UInt32 begin
+@enum SDL_ScaleMode::UInt32 begin
     SDL_ScaleModeNearest = 0
     SDL_ScaleModeLinear = 1
     SDL_ScaleModeBest = 2
 end
 
-@cenum SDL_TextureAccess::UInt32 begin
+@enum SDL_TextureAccess::UInt32 begin
     SDL_TEXTUREACCESS_STATIC = 0
     SDL_TEXTUREACCESS_STREAMING = 1
     SDL_TEXTUREACCESS_TARGET = 2
 end
 
-@cenum SDL_TextureModulate::UInt32 begin
+@enum SDL_TextureModulate::UInt32 begin
     SDL_TEXTUREMODULATE_NONE = 0
     SDL_TEXTUREMODULATE_COLOR = 1
     SDL_TEXTUREMODULATE_ALPHA = 2
 end
 
-@cenum SDL_RendererFlip::UInt32 begin
+@enum SDL_RendererFlip::UInt32 begin
     SDL_FLIP_NONE = 0
     SDL_FLIP_HORIZONTAL = 1
     SDL_FLIP_VERTICAL = 2
@@ -4342,7 +4472,7 @@ const SDL_Sensor = _SDL_Sensor
 
 const SDL_SensorID = Sint32
 
-@cenum SDL_SensorType::Int32 begin
+@enum SDL_SensorType::Int32 begin
     SDL_SENSOR_INVALID = -1
     SDL_SENSOR_UNKNOWN = 0
     SDL_SENSOR_ACCEL = 1
@@ -4413,7 +4543,7 @@ function SDL_IsShapedWindow(window)
     ccall((:SDL_IsShapedWindow, libsdl2), SDL_bool, (Ptr{SDL_Window},), window)
 end
 
-@cenum WindowShapeMode::UInt32 begin
+@enum WindowShapeMode::UInt32 begin
     ShapeModeDefault = 0
     ShapeModeBinarizeAlpha = 1
     ShapeModeReverseBinarizeAlpha = 2
@@ -4422,6 +4552,23 @@ end
 
 struct SDL_WindowShapeParams
     data::NTuple{4, UInt8}
+end
+
+function Base.getproperty(x::Ptr{SDL_WindowShapeParams}, f::Symbol)
+    f === :binarizationCutoff && return Ptr{Uint8}(x + 0)
+    f === :colorKey && return Ptr{SDL_Color}(x + 0)
+    return getfield(x, f)
+end
+
+function Base.getproperty(x::SDL_WindowShapeParams, f::Symbol)
+    r = Ref{SDL_WindowShapeParams}(x)
+    ptr = Base.unsafe_convert(Ptr{SDL_WindowShapeParams}, r)
+    fptr = getproperty(ptr, f)
+    GC.@preserve r unsafe_load(fptr)
+end
+
+function Base.setproperty!(x::Ptr{SDL_WindowShapeParams}, f::Symbol, v)
+    unsafe_store!(getproperty(x, f), v)
 end
 
 struct SDL_WindowShapeMode
@@ -4537,7 +4684,7 @@ function Mix_Linked_Version()
     ccall((:Mix_Linked_Version, libsdl2_mixer), Ptr{SDL_version}, ())
 end
 
-@cenum MIX_InitFlags::UInt32 begin
+@enum MIX_InitFlags::UInt32 begin
     MIX_INIT_FLAC = 1
     MIX_INIT_MOD = 2
     MIX_INIT_MP3 = 8
@@ -4561,13 +4708,13 @@ struct Mix_Chunk
     volume::Uint8
 end
 
-@cenum Mix_Fading::UInt32 begin
+@enum Mix_Fading::UInt32 begin
     MIX_NO_FADING = 0
     MIX_FADING_OUT = 1
     MIX_FADING_IN = 2
 end
 
-@cenum Mix_MusicType::UInt32 begin
+@enum Mix_MusicType::UInt32 begin
     MUS_NONE = 0
     MUS_CMD = 1
     MUS_WAV = 2
@@ -4889,7 +5036,7 @@ function IMG_Linked_Version()
     ccall((:IMG_Linked_Version, libsdl2_image), Ptr{SDL_version}, ())
 end
 
-@cenum IMG_InitFlags::UInt32 begin
+@enum IMG_InitFlags::UInt32 begin
     IMG_INIT_JPG = 1
     IMG_INIT_PNG = 2
     IMG_INIT_TIF = 4
@@ -5267,6 +5414,1058 @@ end
 function TTF_GetFontKerningSizeGlyphs(font, previous_ch, ch)
     ccall((:TTF_GetFontKerningSizeGlyphs, libsdl2_ttf), Cint, (Ptr{TTF_Font}, Uint16, Uint16), font, previous_ch, ch)
 end
+
+struct var"##Ctag#655"
+    data::NTuple{24, UInt8}
+end
+
+function Base.getproperty(x::Ptr{var"##Ctag#655"}, f::Symbol)
+    f === :stdio && return Ptr{var"##Ctag#656"}(x + 0)
+    f === :mem && return Ptr{var"##Ctag#657"}(x + 0)
+    f === :unknown && return Ptr{var"##Ctag#658"}(x + 0)
+    return getfield(x, f)
+end
+
+function Base.getproperty(x::var"##Ctag#655", f::Symbol)
+    r = Ref{var"##Ctag#655"}(x)
+    ptr = Base.unsafe_convert(Ptr{var"##Ctag#655"}, r)
+    fptr = getproperty(ptr, f)
+    GC.@preserve r unsafe_load(fptr)
+end
+
+function Base.setproperty!(x::Ptr{var"##Ctag#655"}, f::Symbol, v)
+    unsafe_store!(getproperty(x, f), v)
+end
+
+struct var"##Ctag#656"
+    autoclose::SDL_bool
+    fp::Ptr{Libc.FILE}
+end
+
+function Base.getproperty(x::Ptr{var"##Ctag#656"}, f::Symbol)
+    f === :autoclose && return Ptr{SDL_bool}(x + 0)
+    f === :fp && return Ptr{Ptr{Libc.FILE}}(x + 8)
+    return getfield(x, f)
+end
+
+function Base.getproperty(x::var"##Ctag#656", f::Symbol)
+    r = Ref{var"##Ctag#656"}(x)
+    ptr = Base.unsafe_convert(Ptr{var"##Ctag#656"}, r)
+    fptr = getproperty(ptr, f)
+    GC.@preserve r unsafe_load(fptr)
+end
+
+function Base.setproperty!(x::Ptr{var"##Ctag#656"}, f::Symbol, v)
+    unsafe_store!(getproperty(x, f), v)
+end
+
+struct var"##Ctag#657"
+    base::Ptr{Uint8}
+    here::Ptr{Uint8}
+    stop::Ptr{Uint8}
+end
+
+function Base.getproperty(x::Ptr{var"##Ctag#657"}, f::Symbol)
+    f === :base && return Ptr{Ptr{Uint8}}(x + 0)
+    f === :here && return Ptr{Ptr{Uint8}}(x + 8)
+    f === :stop && return Ptr{Ptr{Uint8}}(x + 16)
+    return getfield(x, f)
+end
+
+function Base.getproperty(x::var"##Ctag#657", f::Symbol)
+    r = Ref{var"##Ctag#657"}(x)
+    ptr = Base.unsafe_convert(Ptr{var"##Ctag#657"}, r)
+    fptr = getproperty(ptr, f)
+    GC.@preserve r unsafe_load(fptr)
+end
+
+function Base.setproperty!(x::Ptr{var"##Ctag#657"}, f::Symbol, v)
+    unsafe_store!(getproperty(x, f), v)
+end
+
+struct var"##Ctag#658"
+    data1::Ptr{Cvoid}
+    data2::Ptr{Cvoid}
+end
+
+function Base.getproperty(x::Ptr{var"##Ctag#658"}, f::Symbol)
+    f === :data1 && return Ptr{Ptr{Cvoid}}(x + 0)
+    f === :data2 && return Ptr{Ptr{Cvoid}}(x + 8)
+    return getfield(x, f)
+end
+
+function Base.getproperty(x::var"##Ctag#658", f::Symbol)
+    r = Ref{var"##Ctag#658"}(x)
+    ptr = Base.unsafe_convert(Ptr{var"##Ctag#658"}, r)
+    fptr = getproperty(ptr, f)
+    GC.@preserve r unsafe_load(fptr)
+end
+
+function Base.setproperty!(x::Ptr{var"##Ctag#658"}, f::Symbol, v)
+    unsafe_store!(getproperty(x, f), v)
+end
+
+struct var"##Ctag#659"
+    data::NTuple{8, UInt8}
+end
+
+function Base.getproperty(x::Ptr{var"##Ctag#659"}, f::Symbol)
+    f === :button && return Ptr{Cint}(x + 0)
+    f === :axis && return Ptr{Cint}(x + 0)
+    f === :hat && return Ptr{var"##Ctag#660"}(x + 0)
+    return getfield(x, f)
+end
+
+function Base.getproperty(x::var"##Ctag#659", f::Symbol)
+    r = Ref{var"##Ctag#659"}(x)
+    ptr = Base.unsafe_convert(Ptr{var"##Ctag#659"}, r)
+    fptr = getproperty(ptr, f)
+    GC.@preserve r unsafe_load(fptr)
+end
+
+function Base.setproperty!(x::Ptr{var"##Ctag#659"}, f::Symbol, v)
+    unsafe_store!(getproperty(x, f), v)
+end
+
+struct var"##Ctag#660"
+    hat::Cint
+    hat_mask::Cint
+end
+
+function Base.getproperty(x::Ptr{var"##Ctag#660"}, f::Symbol)
+    f === :hat && return Ptr{Cint}(x + 0)
+    f === :hat_mask && return Ptr{Cint}(x + 4)
+    return getfield(x, f)
+end
+
+function Base.getproperty(x::var"##Ctag#660", f::Symbol)
+    r = Ref{var"##Ctag#660"}(x)
+    ptr = Base.unsafe_convert(Ptr{var"##Ctag#660"}, r)
+    fptr = getproperty(ptr, f)
+    GC.@preserve r unsafe_load(fptr)
+end
+
+function Base.setproperty!(x::Ptr{var"##Ctag#660"}, f::Symbol, v)
+    unsafe_store!(getproperty(x, f), v)
+end
+
+const SDL_h_ = nothing
+
+const SDL_main_h_ = nothing
+
+const SDL_stdinc_h_ = nothing
+
+const SDL_config_h_ = nothing
+
+const SDL_platform_h_ = nothing
+
+const _begin_code_h = nothing
+
+# Skipping MacroDefinition: SDL_DEPRECATED __attribute__ ( ( deprecated ) )
+
+# Skipping MacroDefinition: SDL_UNUSED __attribute__ ( ( unused ) )
+
+# Skipping MacroDefinition: DECLSPEC __attribute__ ( ( visibility ( "default" ) ) )
+
+const SDLCALL = nothing
+
+# Skipping MacroDefinition: SDL_INLINE __inline__
+
+# Skipping MacroDefinition: SDL_FORCE_INLINE __attribute__ ( ( always_inline ) ) static __inline__
+
+# Skipping MacroDefinition: SDL_NORETURN __attribute__ ( ( noreturn ) )
+
+const SIZEOF_VOIDP = 8
+
+const HAVE_GCC_ATOMICS = 1
+
+const HAVE_LIBC = 1
+
+const STDC_HEADERS = 1
+
+const HAVE_MALLOC = 1
+
+const HAVE_CALLOC = 1
+
+const HAVE_REALLOC = 1
+
+const HAVE_FREE = 1
+
+const HAVE_ALLOCA = 1
+
+const HAVE_GETENV = 1
+
+const HAVE_SETENV = 1
+
+const HAVE_PUTENV = 1
+
+const HAVE_UNSETENV = 1
+
+const HAVE_QSORT = 1
+
+const HAVE_ABS = 1
+
+const HAVE_BCOPY = 1
+
+const HAVE_MEMSET = 1
+
+const HAVE_MEMCPY = 1
+
+const HAVE_MEMMOVE = 1
+
+const HAVE_WCSLEN = 1
+
+const HAVE_WCSLCPY = 1
+
+const HAVE_WCSLCAT = 1
+
+const HAVE_WCSDUP = 1
+
+const HAVE_WCSSTR = 1
+
+const HAVE_WCSCMP = 1
+
+const HAVE_WCSNCMP = 1
+
+const HAVE_STRLEN = 1
+
+const HAVE_STRLCPY = 1
+
+const HAVE_STRLCAT = 1
+
+const HAVE_STRCHR = 1
+
+const HAVE_STRRCHR = 1
+
+const HAVE_STRSTR = 1
+
+const HAVE_STRTOK_R = 1
+
+const HAVE_STRTOL = 1
+
+const HAVE_STRTOUL = 1
+
+const HAVE_STRTOLL = 1
+
+const HAVE_STRTOULL = 1
+
+const HAVE_ATOI = 1
+
+const HAVE_ATOF = 1
+
+const HAVE_STRCMP = 1
+
+const HAVE_STRNCMP = 1
+
+const HAVE_STRCASECMP = 1
+
+const HAVE_STRNCASECMP = 1
+
+const HAVE_VSSCANF = 1
+
+const HAVE_VSNPRINTF = 1
+
+const HAVE_M_PI = nothing
+
+const HAVE_ACOS = 1
+
+const HAVE_ACOSF = 1
+
+const HAVE_ASIN = 1
+
+const HAVE_ASINF = 1
+
+const HAVE_ATAN = 1
+
+const HAVE_ATANF = 1
+
+const HAVE_ATAN2 = 1
+
+const HAVE_ATAN2F = 1
+
+const HAVE_CEIL = 1
+
+const HAVE_CEILF = 1
+
+const HAVE_COPYSIGN = 1
+
+const HAVE_COPYSIGNF = 1
+
+const HAVE_COS = 1
+
+const HAVE_COSF = 1
+
+const HAVE_EXP = 1
+
+const HAVE_EXPF = 1
+
+const HAVE_FABS = 1
+
+const HAVE_FABSF = 1
+
+const HAVE_FLOOR = 1
+
+const HAVE_FLOORF = 1
+
+const HAVE_FMOD = 1
+
+const HAVE_FMODF = 1
+
+const HAVE_LOG = 1
+
+const HAVE_LOGF = 1
+
+const HAVE_LOG10 = 1
+
+const HAVE_LOG10F = 1
+
+const HAVE_POW = 1
+
+const HAVE_POWF = 1
+
+const HAVE_SCALBN = 1
+
+const HAVE_SCALBNF = 1
+
+const HAVE_SIN = 1
+
+const HAVE_SINF = 1
+
+const HAVE_SQRT = 1
+
+const HAVE_SQRTF = 1
+
+const HAVE_TAN = 1
+
+const HAVE_TANF = 1
+
+const HAVE_FSEEKO = 1
+
+const HAVE_SIGACTION = 1
+
+const HAVE_SA_SIGACTION = 1
+
+const HAVE_SETJMP = 1
+
+const HAVE_NANOSLEEP = 1
+
+const HAVE_SYSCONF = 1
+
+const HAVE_SYSCTLBYNAME = 1
+
+const HAVE_MPROTECT = 1
+
+const HAVE_PTHREAD_SETNAME_NP = 1
+
+const HAVE_POLL = 1
+
+const HAVE__EXIT = 1
+
+const SDL_AUDIO_DRIVER_COREAUDIO = 1
+
+const SDL_AUDIO_DRIVER_DISK = 1
+
+const SDL_AUDIO_DRIVER_DUMMY = 1
+
+const SDL_JOYSTICK_IOKIT = 1
+
+const SDL_HAPTIC_IOKIT = 1
+
+const SDL_SENSOR_DUMMY = 1
+
+const SDL_LOADSO_DLOPEN = 1
+
+const SDL_THREAD_PTHREAD = 1
+
+const SDL_THREAD_PTHREAD_RECURSIVE_MUTEX = 1
+
+const SDL_TIMER_UNIX = 1
+
+const SDL_VIDEO_DRIVER_COCOA = 1
+
+const SDL_VIDEO_DRIVER_DUMMY = 1
+
+const SDL_VIDEO_RENDER_OGL = 1
+
+const SDL_VIDEO_RENDER_OGL_ES2 = 1
+
+const SDL_VIDEO_OPENGL = 1
+
+const SDL_VIDEO_OPENGL_ES2 = 1
+
+const SDL_VIDEO_OPENGL_CGL = 1
+
+const SDL_VIDEO_OPENGL_EGL = 1
+
+const SDL_POWER_MACOSX = 1
+
+const SDL_FILESYSTEM_COCOA = 1
+
+const SDL_ASSEMBLY_ROUTINES = 1
+
+# Skipping MacroDefinition: SDL_MAX_SINT8 ( ( Sint8 ) 0x7F )
+
+# Skipping MacroDefinition: SDL_MIN_SINT8 ( ( Sint8 ) ( ~ 0x7F ) )
+
+# Skipping MacroDefinition: SDL_MAX_UINT8 ( ( Uint8 ) 0xFF )
+
+# Skipping MacroDefinition: SDL_MIN_UINT8 ( ( Uint8 ) 0x00 )
+
+# Skipping MacroDefinition: SDL_MAX_SINT16 ( ( Sint16 ) 0x7FFF )
+
+# Skipping MacroDefinition: SDL_MIN_SINT16 ( ( Sint16 ) ( ~ 0x7FFF ) )
+
+# Skipping MacroDefinition: SDL_MAX_UINT16 ( ( Uint16 ) 0xFFFF )
+
+# Skipping MacroDefinition: SDL_MIN_UINT16 ( ( Uint16 ) 0x0000 )
+
+# Skipping MacroDefinition: SDL_MAX_SINT32 ( ( Sint32 ) 0x7FFFFFFF )
+
+# Skipping MacroDefinition: SDL_MIN_SINT32 ( ( Sint32 ) ( ~ 0x7FFFFFFF ) )
+
+# Skipping MacroDefinition: SDL_MAX_UINT32 ( ( Uint32 ) 0xFFFFFFFFu )
+
+# Skipping MacroDefinition: SDL_MIN_UINT32 ( ( Uint32 ) 0x00000000 )
+
+# Skipping MacroDefinition: SDL_MAX_SINT64 ( ( Sint64 ) 0x7FFFFFFFFFFFFFFFll )
+
+# Skipping MacroDefinition: SDL_MIN_SINT64 ( ( Sint64 ) ( ~ 0x7FFFFFFFFFFFFFFFll ) )
+
+# Skipping MacroDefinition: SDL_MAX_UINT64 ( ( Uint64 ) 0xFFFFFFFFFFFFFFFFull )
+
+# Skipping MacroDefinition: SDL_MIN_UINT64 ( ( Uint64 ) ( 0x0000000000000000ull ) )
+
+const SDL_PRIs64 = "lld"
+
+const SDL_PRINTF_FORMAT_STRING = nothing
+
+const SDL_SCANF_FORMAT_STRING = nothing
+
+# Skipping MacroDefinition: SDL_ICONV_ERROR ( size_t ) - 1
+
+# Skipping MacroDefinition: SDL_ICONV_E2BIG ( size_t ) - 2
+
+# Skipping MacroDefinition: SDL_ICONV_EILSEQ ( size_t ) - 3
+
+# Skipping MacroDefinition: SDL_ICONV_EINVAL ( size_t ) - 4
+
+const SDLMAIN_DECLSPEC = nothing
+
+const SDL_assert_h_ = nothing
+
+const SDL_ASSERT_LEVEL = 2
+
+# Skipping MacroDefinition: SDL_FUNCTION __func__
+
+const SDL_NULL_WHILE_LOOP_CONDITION = 0
+
+const SDL_assert_state = SDL_AssertState
+
+const SDL_assert_data = SDL_AssertData
+
+const SDL_atomic_h_ = nothing
+
+const SDL_audio_h_ = nothing
+
+const SDL_error_h_ = nothing
+
+const SDL_endian_h_ = nothing
+
+const SDL_LIL_ENDIAN = 1234
+
+const SDL_BIG_ENDIAN = 4321
+
+const SDL_BYTEORDER = SDL_LIL_ENDIAN
+
+const SDL_mutex_h_ = nothing
+
+const SDL_MUTEX_TIMEDOUT = 1
+
+# Skipping MacroDefinition: SDL_MUTEX_MAXWAIT ( ~ ( Uint32 ) 0 )
+
+const SDL_thread_h_ = nothing
+
+const SDL_rwops_h_ = nothing
+
+const SDL_RWOPS_UNKNOWN = Cuint(0)
+
+const SDL_RWOPS_WINFILE = Cuint(1)
+
+const SDL_RWOPS_STDFILE = Cuint(2)
+
+const SDL_RWOPS_JNIFILE = Cuint(3)
+
+const SDL_RWOPS_MEMORY = Cuint(4)
+
+const SDL_RWOPS_MEMORY_RO = Cuint(5)
+
+const RW_SEEK_SET = 0
+
+const RW_SEEK_CUR = 1
+
+const RW_SEEK_END = 2
+
+const SDL_AUDIO_MASK_BITSIZE = Float32(0x0f)
+
+# Skipping MacroDefinition: SDL_AUDIO_MASK_DATATYPE ( 1 << 8 )
+
+# Skipping MacroDefinition: SDL_AUDIO_MASK_ENDIAN ( 1 << 12 )
+
+# Skipping MacroDefinition: SDL_AUDIO_MASK_SIGNED ( 1 << 15 )
+
+const AUDIO_U8 = 0x0008
+
+const AUDIO_S8 = 0x8008
+
+const AUDIO_U16LSB = 0x0010
+
+const AUDIO_S16LSB = 0x8010
+
+const AUDIO_U16MSB = 0x1010
+
+const AUDIO_S16MSB = 0x9010
+
+const AUDIO_U16 = AUDIO_U16LSB
+
+const AUDIO_S16 = AUDIO_S16LSB
+
+const AUDIO_S32LSB = 0x8020
+
+const AUDIO_S32MSB = 0x9020
+
+const AUDIO_S32 = AUDIO_S32LSB
+
+const AUDIO_F32LSB = 0x8120
+
+const AUDIO_F32MSB = 0x9120
+
+const AUDIO_F32 = AUDIO_F32LSB
+
+const AUDIO_U16SYS = AUDIO_U16LSB
+
+const AUDIO_S16SYS = AUDIO_S16LSB
+
+const AUDIO_S32SYS = AUDIO_S32LSB
+
+const AUDIO_F32SYS = AUDIO_F32LSB
+
+const SDL_AUDIO_ALLOW_FREQUENCY_CHANGE = 0x00000001
+
+const SDL_AUDIO_ALLOW_FORMAT_CHANGE = 0x00000002
+
+const SDL_AUDIO_ALLOW_CHANNELS_CHANGE = 0x00000004
+
+const SDL_AUDIO_ALLOW_SAMPLES_CHANGE = 0x00000008
+
+# Skipping MacroDefinition: SDL_AUDIO_ALLOW_ANY_CHANGE ( SDL_AUDIO_ALLOW_FREQUENCY_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE | SDL_AUDIO_ALLOW_CHANNELS_CHANGE | SDL_AUDIO_ALLOW_SAMPLES_CHANGE )
+
+const SDL_AUDIOCVT_MAX_FILTERS = 9
+
+# Skipping MacroDefinition: SDL_AUDIOCVT_PACKED __attribute__ ( ( packed ) )
+
+const SDL_MIX_MAXVOLUME = 128
+
+const SDL_clipboard_h_ = nothing
+
+const SDL_cpuinfo_h_ = nothing
+
+const SDL_CACHELINE_SIZE = 128
+
+const SDL_events_h_ = nothing
+
+const SDL_video_h_ = nothing
+
+const SDL_pixels_h_ = nothing
+
+const SDL_ALPHA_OPAQUE = 255
+
+const SDL_ALPHA_TRANSPARENT = 0
+
+const SDL_Colour = SDL_Color
+
+const SDL_rect_h_ = nothing
+
+const SDL_surface_h_ = nothing
+
+const SDL_blendmode_h_ = nothing
+
+const SDL_SWSURFACE = 0
+
+const SDL_PREALLOC = 0x00000001
+
+const SDL_RLEACCEL = 0x00000002
+
+const SDL_DONTFREE = 0x00000004
+
+const SDL_SIMD_ALIGNED = 0x00000008
+
+const SDL_BlitSurface = SDL_UpperBlit
+
+const SDL_BlitScaled = SDL_UpperBlitScaled
+
+const SDL_WINDOWPOS_UNDEFINED_MASK = Cuint(0x1fff0000)
+
+# Skipping MacroDefinition: SDL_WINDOWPOS_UNDEFINED SDL_WINDOWPOS_UNDEFINED_DISPLAY ( 0 )
+
+const SDL_WINDOWPOS_CENTERED_MASK = Cuint(0x2fff0000)
+
+# Skipping MacroDefinition: SDL_WINDOWPOS_CENTERED SDL_WINDOWPOS_CENTERED_DISPLAY ( 0 )
+
+const SDL_keyboard_h_ = nothing
+
+const SDL_keycode_h_ = nothing
+
+const SDL_scancode_h_ = nothing
+
+# Skipping MacroDefinition: SDLK_SCANCODE_MASK ( 1 << 30 )
+
+# Skipping MacroDefinition: KMOD_CTRL ( KMOD_LCTRL | KMOD_RCTRL )
+
+# Skipping MacroDefinition: KMOD_SHIFT ( KMOD_LSHIFT | KMOD_RSHIFT )
+
+# Skipping MacroDefinition: KMOD_ALT ( KMOD_LALT | KMOD_RALT )
+
+# Skipping MacroDefinition: KMOD_GUI ( KMOD_LGUI | KMOD_RGUI )
+
+const SDL_mouse_h_ = nothing
+
+const SDL_BUTTON_LEFT = 1
+
+const SDL_BUTTON_MIDDLE = 2
+
+const SDL_BUTTON_RIGHT = 3
+
+const SDL_BUTTON_X1 = 4
+
+const SDL_BUTTON_X2 = 5
+
+# Skipping MacroDefinition: SDL_BUTTON_LMASK SDL_BUTTON ( SDL_BUTTON_LEFT )
+
+# Skipping MacroDefinition: SDL_BUTTON_MMASK SDL_BUTTON ( SDL_BUTTON_MIDDLE )
+
+# Skipping MacroDefinition: SDL_BUTTON_RMASK SDL_BUTTON ( SDL_BUTTON_RIGHT )
+
+# Skipping MacroDefinition: SDL_BUTTON_X1MASK SDL_BUTTON ( SDL_BUTTON_X1 )
+
+# Skipping MacroDefinition: SDL_BUTTON_X2MASK SDL_BUTTON ( SDL_BUTTON_X2 )
+
+const SDL_joystick_h_ = nothing
+
+const SDL_JOYSTICK_AXIS_MAX = 32767
+
+# Skipping MacroDefinition: SDL_JOYSTICK_AXIS_MIN - 32768
+
+const SDL_HAT_CENTERED = 0x00
+
+const SDL_HAT_UP = 0x01
+
+const SDL_HAT_RIGHT = 0x02
+
+const SDL_HAT_DOWN = 0x04
+
+const SDL_HAT_LEFT = 0x08
+
+# Skipping MacroDefinition: SDL_HAT_RIGHTUP ( SDL_HAT_RIGHT | SDL_HAT_UP )
+
+# Skipping MacroDefinition: SDL_HAT_RIGHTDOWN ( SDL_HAT_RIGHT | SDL_HAT_DOWN )
+
+# Skipping MacroDefinition: SDL_HAT_LEFTUP ( SDL_HAT_LEFT | SDL_HAT_UP )
+
+# Skipping MacroDefinition: SDL_HAT_LEFTDOWN ( SDL_HAT_LEFT | SDL_HAT_DOWN )
+
+const SDL_gamecontroller_h_ = nothing
+
+const SDL_quit_h_ = nothing
+
+const SDL_gesture_h_ = nothing
+
+const SDL_touch_h_ = nothing
+
+# Skipping MacroDefinition: SDL_TOUCH_MOUSEID ( ( Uint32 ) - 1 )
+
+# Skipping MacroDefinition: SDL_MOUSE_TOUCHID ( ( Sint64 ) - 1 )
+
+const SDL_RELEASED = 0
+
+const SDL_PRESSED = 1
+
+const SDL_TEXTEDITINGEVENT_TEXT_SIZE = 32
+
+const SDL_TEXTINPUTEVENT_TEXT_SIZE = 32
+
+# Skipping MacroDefinition: SDL_QUERY - 1
+
+const SDL_IGNORE = 0
+
+const SDL_DISABLE = 0
+
+const SDL_ENABLE = 1
+
+const SDL_filesystem_h_ = nothing
+
+const SDL_haptic_h_ = nothing
+
+# Skipping MacroDefinition: SDL_HAPTIC_CONSTANT ( 1u << 0 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_SINE ( 1u << 1 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_LEFTRIGHT ( 1u << 2 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_TRIANGLE ( 1u << 3 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_SAWTOOTHUP ( 1u << 4 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_SAWTOOTHDOWN ( 1u << 5 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_RAMP ( 1u << 6 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_SPRING ( 1u << 7 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_DAMPER ( 1u << 8 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_INERTIA ( 1u << 9 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_FRICTION ( 1u << 10 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_CUSTOM ( 1u << 11 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_GAIN ( 1u << 12 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_AUTOCENTER ( 1u << 13 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_STATUS ( 1u << 14 )
+
+# Skipping MacroDefinition: SDL_HAPTIC_PAUSE ( 1u << 15 )
+
+const SDL_HAPTIC_POLAR = 0
+
+const SDL_HAPTIC_CARTESIAN = 1
+
+const SDL_HAPTIC_SPHERICAL = 2
+
+const SDL_HAPTIC_INFINITY = Cuint(4294967295)
+
+const SDL_hints_h_ = nothing
+
+const SDL_HINT_FRAMEBUFFER_ACCELERATION = "SDL_FRAMEBUFFER_ACCELERATION"
+
+const SDL_HINT_RENDER_DRIVER = "SDL_RENDER_DRIVER"
+
+const SDL_HINT_RENDER_OPENGL_SHADERS = "SDL_RENDER_OPENGL_SHADERS"
+
+const SDL_HINT_RENDER_DIRECT3D_THREADSAFE = "SDL_RENDER_DIRECT3D_THREADSAFE"
+
+const SDL_HINT_RENDER_DIRECT3D11_DEBUG = "SDL_RENDER_DIRECT3D11_DEBUG"
+
+const SDL_HINT_RENDER_LOGICAL_SIZE_MODE = "SDL_RENDER_LOGICAL_SIZE_MODE"
+
+const SDL_HINT_RENDER_SCALE_QUALITY = "SDL_RENDER_SCALE_QUALITY"
+
+const SDL_HINT_RENDER_VSYNC = "SDL_RENDER_VSYNC"
+
+const SDL_HINT_VIDEO_ALLOW_SCREENSAVER = "SDL_VIDEO_ALLOW_SCREENSAVER"
+
+const SDL_HINT_VIDEO_EXTERNAL_CONTEXT = "SDL_VIDEO_EXTERNAL_CONTEXT"
+
+const SDL_HINT_VIDEO_X11_XVIDMODE = "SDL_VIDEO_X11_XVIDMODE"
+
+const SDL_HINT_VIDEO_X11_XINERAMA = "SDL_VIDEO_X11_XINERAMA"
+
+const SDL_HINT_VIDEO_X11_XRANDR = "SDL_VIDEO_X11_XRANDR"
+
+const SDL_HINT_VIDEO_X11_WINDOW_VISUALID = "SDL_VIDEO_X11_WINDOW_VISUALID"
+
+const SDL_HINT_VIDEO_X11_NET_WM_PING = "SDL_VIDEO_X11_NET_WM_PING"
+
+const SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR = "SDL_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR"
+
+const SDL_HINT_VIDEO_X11_FORCE_EGL = "SDL_VIDEO_X11_FORCE_EGL"
+
+const SDL_HINT_WINDOW_FRAME_USABLE_WHILE_CURSOR_HIDDEN = "SDL_WINDOW_FRAME_USABLE_WHILE_CURSOR_HIDDEN"
+
+const SDL_HINT_WINDOWS_INTRESOURCE_ICON = "SDL_WINDOWS_INTRESOURCE_ICON"
+
+const SDL_HINT_WINDOWS_INTRESOURCE_ICON_SMALL = "SDL_WINDOWS_INTRESOURCE_ICON_SMALL"
+
+const SDL_HINT_WINDOWS_ENABLE_MESSAGELOOP = "SDL_WINDOWS_ENABLE_MESSAGELOOP"
+
+const SDL_HINT_GRAB_KEYBOARD = "SDL_GRAB_KEYBOARD"
+
+const SDL_HINT_MOUSE_DOUBLE_CLICK_TIME = "SDL_MOUSE_DOUBLE_CLICK_TIME"
+
+const SDL_HINT_MOUSE_DOUBLE_CLICK_RADIUS = "SDL_MOUSE_DOUBLE_CLICK_RADIUS"
+
+const SDL_HINT_MOUSE_NORMAL_SPEED_SCALE = "SDL_MOUSE_NORMAL_SPEED_SCALE"
+
+const SDL_HINT_MOUSE_RELATIVE_SPEED_SCALE = "SDL_MOUSE_RELATIVE_SPEED_SCALE"
+
+const SDL_HINT_MOUSE_RELATIVE_MODE_WARP = "SDL_MOUSE_RELATIVE_MODE_WARP"
+
+const SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH = "SDL_MOUSE_FOCUS_CLICKTHROUGH"
+
+const SDL_HINT_TOUCH_MOUSE_EVENTS = "SDL_TOUCH_MOUSE_EVENTS"
+
+const SDL_HINT_MOUSE_TOUCH_EVENTS = "SDL_MOUSE_TOUCH_EVENTS"
+
+const SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS = "SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS"
+
+const SDL_HINT_IDLE_TIMER_DISABLED = "SDL_IOS_IDLE_TIMER_DISABLED"
+
+const SDL_HINT_ORIENTATIONS = "SDL_IOS_ORIENTATIONS"
+
+const SDL_HINT_APPLE_TV_CONTROLLER_UI_EVENTS = "SDL_APPLE_TV_CONTROLLER_UI_EVENTS"
+
+const SDL_HINT_APPLE_TV_REMOTE_ALLOW_ROTATION = "SDL_APPLE_TV_REMOTE_ALLOW_ROTATION"
+
+const SDL_HINT_IOS_HIDE_HOME_INDICATOR = "SDL_IOS_HIDE_HOME_INDICATOR"
+
+const SDL_HINT_ACCELEROMETER_AS_JOYSTICK = "SDL_ACCELEROMETER_AS_JOYSTICK"
+
+const SDL_HINT_TV_REMOTE_AS_JOYSTICK = "SDL_TV_REMOTE_AS_JOYSTICK"
+
+const SDL_HINT_XINPUT_ENABLED = "SDL_XINPUT_ENABLED"
+
+const SDL_HINT_XINPUT_USE_OLD_JOYSTICK_MAPPING = "SDL_XINPUT_USE_OLD_JOYSTICK_MAPPING"
+
+const SDL_HINT_GAMECONTROLLERTYPE = "SDL_GAMECONTROLLERTYPE"
+
+const SDL_HINT_GAMECONTROLLERCONFIG = "SDL_GAMECONTROLLERCONFIG"
+
+const SDL_HINT_GAMECONTROLLERCONFIG_FILE = "SDL_GAMECONTROLLERCONFIG_FILE"
+
+const SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES = "SDL_GAMECONTROLLER_IGNORE_DEVICES"
+
+const SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT = "SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT"
+
+const SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS = "SDL_GAMECONTROLLER_USE_BUTTON_LABELS"
+
+const SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS = "SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS"
+
+const SDL_HINT_JOYSTICK_HIDAPI = "SDL_JOYSTICK_HIDAPI"
+
+const SDL_HINT_JOYSTICK_HIDAPI_PS4 = "SDL_JOYSTICK_HIDAPI_PS4"
+
+const SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE = "SDL_JOYSTICK_HIDAPI_PS4_RUMBLE"
+
+const SDL_HINT_JOYSTICK_HIDAPI_STEAM = "SDL_JOYSTICK_HIDAPI_STEAM"
+
+const SDL_HINT_JOYSTICK_HIDAPI_SWITCH = "SDL_JOYSTICK_HIDAPI_SWITCH"
+
+const SDL_HINT_JOYSTICK_HIDAPI_XBOX = "SDL_JOYSTICK_HIDAPI_XBOX"
+
+const SDL_HINT_JOYSTICK_HIDAPI_GAMECUBE = "SDL_JOYSTICK_HIDAPI_GAMECUBE"
+
+const SDL_HINT_ENABLE_STEAM_CONTROLLERS = "SDL_ENABLE_STEAM_CONTROLLERS"
+
+const SDL_HINT_ALLOW_TOPMOST = "SDL_ALLOW_TOPMOST"
+
+const SDL_HINT_TIMER_RESOLUTION = "SDL_TIMER_RESOLUTION"
+
+const SDL_HINT_QTWAYLAND_CONTENT_ORIENTATION = "SDL_QTWAYLAND_CONTENT_ORIENTATION"
+
+const SDL_HINT_QTWAYLAND_WINDOW_FLAGS = "SDL_QTWAYLAND_WINDOW_FLAGS"
+
+const SDL_HINT_THREAD_STACK_SIZE = "SDL_THREAD_STACK_SIZE"
+
+const SDL_HINT_VIDEO_HIGHDPI_DISABLED = "SDL_VIDEO_HIGHDPI_DISABLED"
+
+const SDL_HINT_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK = "SDL_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK"
+
+const SDL_HINT_VIDEO_WIN_D3DCOMPILER = "SDL_VIDEO_WIN_D3DCOMPILER"
+
+const SDL_HINT_VIDEO_WINDOW_SHARE_PIXEL_FORMAT = "SDL_VIDEO_WINDOW_SHARE_PIXEL_FORMAT"
+
+const SDL_HINT_WINRT_PRIVACY_POLICY_URL = "SDL_WINRT_PRIVACY_POLICY_URL"
+
+const SDL_HINT_WINRT_PRIVACY_POLICY_LABEL = "SDL_WINRT_PRIVACY_POLICY_LABEL"
+
+const SDL_HINT_WINRT_HANDLE_BACK_BUTTON = "SDL_WINRT_HANDLE_BACK_BUTTON"
+
+const SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES = "SDL_VIDEO_MAC_FULLSCREEN_SPACES"
+
+const SDL_HINT_MAC_BACKGROUND_APP = "SDL_MAC_BACKGROUND_APP"
+
+const SDL_HINT_ANDROID_APK_EXPANSION_MAIN_FILE_VERSION = "SDL_ANDROID_APK_EXPANSION_MAIN_FILE_VERSION"
+
+const SDL_HINT_ANDROID_APK_EXPANSION_PATCH_FILE_VERSION = "SDL_ANDROID_APK_EXPANSION_PATCH_FILE_VERSION"
+
+const SDL_HINT_IME_INTERNAL_EDITING = "SDL_IME_INTERNAL_EDITING"
+
+const SDL_HINT_ANDROID_TRAP_BACK_BUTTON = "SDL_ANDROID_TRAP_BACK_BUTTON"
+
+const SDL_HINT_ANDROID_BLOCK_ON_PAUSE = "SDL_ANDROID_BLOCK_ON_PAUSE"
+
+const SDL_HINT_RETURN_KEY_HIDES_IME = "SDL_RETURN_KEY_HIDES_IME"
+
+const SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT = "SDL_EMSCRIPTEN_KEYBOARD_ELEMENT"
+
+const SDL_HINT_NO_SIGNAL_HANDLERS = "SDL_NO_SIGNAL_HANDLERS"
+
+const SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4 = "SDL_WINDOWS_NO_CLOSE_ON_ALT_F4"
+
+const SDL_HINT_BMP_SAVE_LEGACY_FORMAT = "SDL_BMP_SAVE_LEGACY_FORMAT"
+
+const SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING = "SDL_WINDOWS_DISABLE_THREAD_NAMING"
+
+const SDL_HINT_RPI_VIDEO_LAYER = "SDL_RPI_VIDEO_LAYER"
+
+const SDL_HINT_VIDEO_DOUBLE_BUFFER = "SDL_VIDEO_DOUBLE_BUFFER"
+
+const SDL_HINT_OPENGL_ES_DRIVER = "SDL_OPENGL_ES_DRIVER"
+
+const SDL_HINT_AUDIO_RESAMPLING_MODE = "SDL_AUDIO_RESAMPLING_MODE"
+
+const SDL_HINT_AUDIO_CATEGORY = "SDL_AUDIO_CATEGORY"
+
+const SDL_HINT_RENDER_BATCHING = "SDL_RENDER_BATCHING"
+
+const SDL_HINT_EVENT_LOGGING = "SDL_EVENT_LOGGING"
+
+const SDL_HINT_WAVE_RIFF_CHUNK_SIZE = "SDL_WAVE_RIFF_CHUNK_SIZE"
+
+const SDL_HINT_WAVE_TRUNCATION = "SDL_WAVE_TRUNCATION"
+
+const SDL_HINT_WAVE_FACT_CHUNK = "SDL_WAVE_FACT_CHUNK"
+
+const SDL_HINT_DISPLAY_USABLE_BOUNDS = "SDL_DISPLAY_USABLE_BOUNDS"
+
+const SDL_loadso_h_ = nothing
+
+const SDL_log_h_ = nothing
+
+const SDL_MAX_LOG_MESSAGE = 4096
+
+const SDL_messagebox_h_ = nothing
+
+const SDL_metal_h_ = nothing
+
+const SDL_power_h_ = nothing
+
+const SDL_render_h_ = nothing
+
+const SDL_sensor_h_ = nothing
+
+const SDL_STANDARD_GRAVITY = Float32(9.80665)
+
+const SDL_shape_h_ = nothing
+
+# Skipping MacroDefinition: SDL_NONSHAPEABLE_WINDOW - 1
+
+# Skipping MacroDefinition: SDL_INVALID_SHAPE_ARGUMENT - 2
+
+# Skipping MacroDefinition: SDL_WINDOW_LACKS_SHAPE - 3
+
+const SDL_system_h_ = nothing
+
+const SDL_timer_h_ = nothing
+
+const SDL_version_h_ = nothing
+
+const SDL_MAJOR_VERSION = 2
+
+const SDL_MINOR_VERSION = 0
+
+const SDL_PATCHLEVEL = 12
+
+# Skipping MacroDefinition: SDL_COMPILEDVERSION SDL_VERSIONNUM ( SDL_MAJOR_VERSION , SDL_MINOR_VERSION , SDL_PATCHLEVEL )
+
+const SDL_INIT_TIMER = Cuint(0x00000001)
+
+const SDL_INIT_AUDIO = Cuint(0x00000010)
+
+const SDL_INIT_VIDEO = Cuint(0x00000020)
+
+const SDL_INIT_JOYSTICK = Cuint(0x00000200)
+
+const SDL_INIT_HAPTIC = Cuint(0x00001000)
+
+const SDL_INIT_GAMECONTROLLER = Cuint(0x00002000)
+
+const SDL_INIT_EVENTS = Cuint(0x00004000)
+
+const SDL_INIT_SENSOR = Cuint(0x00008000)
+
+const SDL_INIT_NOPARACHUTE = Cuint(0x00100000)
+
+# Skipping MacroDefinition: SDL_INIT_EVERYTHING ( SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_SENSOR )
+
+const SDL_MIXER_H_ = nothing
+
+const SDL_MIXER_MAJOR_VERSION = 2
+
+const SDL_MIXER_MINOR_VERSION = 0
+
+const SDL_MIXER_PATCHLEVEL = 4
+
+const MIX_MAJOR_VERSION = SDL_MIXER_MAJOR_VERSION
+
+const MIX_MINOR_VERSION = SDL_MIXER_MINOR_VERSION
+
+const MIX_PATCHLEVEL = SDL_MIXER_PATCHLEVEL
+
+# Skipping MacroDefinition: SDL_MIXER_COMPILEDVERSION SDL_VERSIONNUM ( SDL_MIXER_MAJOR_VERSION , SDL_MIXER_MINOR_VERSION , SDL_MIXER_PATCHLEVEL )
+
+const MIX_CHANNELS = 8
+
+const MIX_DEFAULT_FREQUENCY = 22050
+
+const MIX_DEFAULT_FORMAT = AUDIO_S16LSB
+
+const MIX_DEFAULT_CHANNELS = 2
+
+const MIX_MAX_VOLUME = SDL_MIX_MAXVOLUME
+
+# Skipping MacroDefinition: MIX_CHANNEL_POST - 2
+
+const MIX_EFFECTSMAXSPEED = "MIX_EFFECTSMAXSPEED"
+
+const SDL_IMAGE_H_ = nothing
+
+const SDL_IMAGE_MAJOR_VERSION = 2
+
+const SDL_IMAGE_MINOR_VERSION = 0
+
+const SDL_IMAGE_PATCHLEVEL = 5
+
+# Skipping MacroDefinition: SDL_IMAGE_COMPILEDVERSION SDL_VERSIONNUM ( SDL_IMAGE_MAJOR_VERSION , SDL_IMAGE_MINOR_VERSION , SDL_IMAGE_PATCHLEVEL )
+
+const SDL_TTF_H_ = nothing
+
+const SDL_TTF_MAJOR_VERSION = 2
+
+const SDL_TTF_MINOR_VERSION = 0
+
+const SDL_TTF_PATCHLEVEL = 15
+
+const TTF_MAJOR_VERSION = SDL_TTF_MAJOR_VERSION
+
+const TTF_MINOR_VERSION = SDL_TTF_MINOR_VERSION
+
+const TTF_PATCHLEVEL = SDL_TTF_PATCHLEVEL
+
+# Skipping MacroDefinition: SDL_TTF_COMPILEDVERSION SDL_VERSIONNUM ( SDL_TTF_MAJOR_VERSION , SDL_TTF_MINOR_VERSION , SDL_TTF_PATCHLEVEL )
+
+const UNICODE_BOM_NATIVE = Float32(0x0fef)
+
+const UNICODE_BOM_SWAPPED = 0xfffe
+
+const TTF_STYLE_NORMAL = 0x00
+
+const TTF_STYLE_BOLD = 0x01
+
+const TTF_STYLE_ITALIC = 0x02
+
+const TTF_STYLE_UNDERLINE = 0x04
+
+const TTF_STYLE_STRIKETHROUGH = 0x08
+
+const TTF_HINTING_NORMAL = 0
+
+const TTF_HINTING_LIGHT = 1
+
+const TTF_HINTING_MONO = 2
+
+const TTF_HINTING_NONE = 3
 
 # exports
 const PREFIXES = ["TTF_", "IMG_", "Mix_", "SDL_"]
